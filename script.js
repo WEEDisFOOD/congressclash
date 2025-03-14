@@ -4,18 +4,18 @@ let sortColumn = 'name';
 let sortOrder = 'asc';
 
 function renderTable() {
-    const tableBody = document.querySelector('#dataTable tbody');
-    tableBody.innerHTML = '';
-    filteredData.forEach(member => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${member.name}</td>
-            <td>${formatCurrency(getNestedValue(member, 'current_stats.Total Receipts.value'))}</td>
-            <td>${formatCurrency(getNestedValue(member, 'current_stats.Total Individual Contributions.value'))}</td>
-            <td>${formatCurrency(getNestedValue(member, 'career_stats.Total Receipts.value'))}</td>
-        `;
-        tableBody.appendChild(row);
-    });
+ const tableBody = document.querySelector('#dataTable tbody');
+ tableBody.innerHTML = '';
+ filteredData.forEach(member => {
+ const row = document.createElement('tr');
+ row.innerHTML = `
+ <td>${member.name}</td>
+ <td>${formatCurrency(member.current_stats['Total Receipts']?.value)}</td>
+ <td>${formatCurrency(member.current_stats['Total Individual Contributions']?.value)}</td>
+ <td>${formatCurrency(member.career_stats['Total Receipts']?.value)}</td>
+ `;
+ tableBody.appendChild(row);
+ });
 }
 
 function formatCurrency(value) {
