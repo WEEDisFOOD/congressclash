@@ -37,22 +37,46 @@ function filterData(searchTerm) {
 }
 
 function sortData(column) {
-    if (sortColumn === column) {
-        sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortColumn = column;
-        sortOrder = 'asc';
-    }
-    filteredData.sort((a, b) => {
-        let valA = getNestedValue(a, column);
-        let valB = getNestedValue(b, column);
-        if (typeof valA === 'object' && valA !== null) valA = valA.value;
-        if (typeof valB === 'object' && valB !== null) valB = valB.value;
-        if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
-        if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
-        return 0;
-    });
-    renderTable();
+ if (sortColumn === column) {
+ sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+ } else {
+ sortColumn = column;
+ sortOrder = 'asc';
+ }
+
+ filteredData.sort((a, b) => {
+ let valA, valB;
+
+ // Map data-column to the correct JSON path
+ switch (column) {
+ case 'name':
+ valA = a.name;
+ valB = b.name;
+ break;
+ case 'current_stats.total_receipts':
+ valA = a.current_stats['Total Receipts']?.value || 0;
+ valB = b.current_stats['Total Receipts']?.value || 0;
+ break;
+ case 'current_stats.individual_contributions':
+ valA = a.current_stats['Total Individual Contributions']?.value || 0;
+ valB = b.current_stats['Total Individual Contributions']?.value || 0;
+ break;
+ case 'career_stats.total_receipts':
+ valA = a.career_stats['Total Receipts']?.value || 0;
+ valB = b.career_stats['Total Receipts']?.value || 0;
+ break;
+ default:
+ valA = 0;
+ valB = 0;
+ }
+
+ // Compare values based on sort order
+ if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+ if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+ return 0;
+ });
+
+ renderTable();
 }
 
 // Fetch JSON data
