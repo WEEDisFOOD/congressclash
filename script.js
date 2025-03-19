@@ -117,3 +117,15 @@ fetch('congress_data.json')
     console.error('Fetch error:', error);
     renderTable([]); // Render empty table on error
   });
+
+let politicians = [
+  {
+    name: "Robert E. Latta",
+    role: "Representative",
+    state: "OH",
+    party: "R",
+    current_stats: { "Total Receipts": { value: 1998121.54, rank: 291 } },
+    career_stats: { "Total Receipts": { value: 12848107.8, rank: 238 } }
+  }
+];
+renderTable(politicians); // Call directly with test data
