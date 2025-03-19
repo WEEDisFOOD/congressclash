@@ -1,18 +1,19 @@
-let allData = [];
+
+let data = [];
 let filteredData = [];
 let sortColumn = 'name';
-let sortDirection = 'asc';
+let sortOrder = 'asc';
 
 function renderTable() {
-    const tableBody = document.querySelector('#data-table tbody');
+    const tableBody = document.querySelector('#dataTable tbody');
     tableBody.innerHTML = '';
     filteredData.forEach(member => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${member.name}</td>
-            <td>${formatCurrency(member.current_stats['Total Receipts']?.value)}</td>
-            <td>${formatCurrency(member.current_stats['Total Individual Contributions']?.value)}</td>
-            <td>${formatCurrency(member.career_stats['Total Receipts']?.value)}</td>
+            <td>${formatCurrency(getNestedValue(member, 'current_stats.Total Receipts.value'))}</td>
+            <td>${formatCurrency(getNestedValue(member, 'current_stats.Total Individual Contributions.value'))}</td>
+            <td>${formatCurrency(getNestedValue(member, 'career_stats.Total Receipts.value'))}</td>
         `;
         tableBody.appendChild(row);
     });
@@ -23,55 +24,35 @@ function formatCurrency(value) {
     return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function getNestedValue(obj, path) {
+    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+}
+
 function filterData(searchTerm) {
     if (searchTerm) {
-        filteredData = allData.filter(member => 
-            member.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        filteredData = data.filter(member => member.name.toLowerCase().includes(searchTerm.toLowerCase()));
     } else {
-        filteredData = allData;
+        filteredData = data;
     }
     renderTable();
 }
 
 function sortData(column) {
     if (sortColumn === column) {
-        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
     } else {
         sortColumn = column;
-        sortDirection = 'asc';
+        sortOrder = 'asc';
     }
-
     filteredData.sort((a, b) => {
-        let valueA, valueB;
-
-        switch (column) {
-            case 'name':
-                valueA = a.name;
-                valueB = b.name;
-                break;
-            case 'current-stats.total-receipts':
-                valueA = a.current_stats['Total Receipts']?.value || 0;
-                valueB = b.current_stats['Total Receipts']?.value || 0;
-                break;
-            case 'current-stats.individual-contributions':
-                valueA = a.current_stats['Total Individual Contributions']?.value || 0;
-                valueB = b.current_stats['Total Individual Contributions']?.value || 0;
-                break;
-            case 'career-stats.total-receipts':
-                valueA = a.career_stats['Total Receipts']?.value || 0;
-                valueB = b.career_stats['Total Receipts']?.value || 0;
-                break;
-            default:
-                valueA = 0;
-                valueB = 0;
-        }
-
-        if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
-        if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+        let valA = getNestedValue(a, column);
+        let valB = getNestedValue(b, column);
+        if (typeof valA === 'object' && valA !== null) valA = valA.value;
+        if (typeof valB === 'object' && valB !== null) valB = valB.value;
+        if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+        if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
         return 0;
     });
-
     renderTable();
 }
 
@@ -79,20 +60,20 @@ function sortData(column) {
 fetch('congress_finance.json')
     .then(response => response.json())
     .then(jsonData => {
-        allData = jsonData;
-        filteredData = allData;
+        data = jsonData;
+        filteredData = data;
         renderTable();
     })
     .catch(error => console.error('Error loading JSON:', error));
 
 // Add event listeners
-document.querySelector('#search-input').addEventListener('input', (event) => {
-    filterData(event.target.value);
+document.querySelector('#searchInput').addEventListener('input', e => {
+    filterData(e.target.value);
 });
 
-document.querySelectorAll('#data-table th').forEach(header => {
-    header.addEventListener('click', () => {
-        const column = header.dataset.column;
+document.querySelectorAll('#dataTable th').forEach(th => {
+    th.addEventListener('click', () => {
+        const column = th.dataset.column;
         sortData(column);
     });
 });
