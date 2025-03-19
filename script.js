@@ -26,39 +26,26 @@ function formatCurrency(value) {
 
 // Render table with filtered data
 function renderTable(data) {
-    const tbody = document.querySelector('#politicians-table tbody');
-    tbody.innerHTML = '';
-    console.log('Rendering data:', data); // Debug: log what’s being rendered
-    if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6">No data available</td></tr>';
-        return;
-    }
-    data.forEach(politician => {
-        const row = document.createElement('tr');
-        const name = politician.name || 'N/A';
-        const role = politician.role || 'N/A';
-        const state = politician.state || 'N/A';
-        const party = politician.party || 'N/A';
-        const currentReceipts = politician.current_stats?.['Total Receipts'];
-        const currentDisplay = currentReceipts
-            ? `${formatCurrency(currentReceipts.value)} (Rank: ${currentReceipts.rank ?? 'N/A'})`
-            : 'N/A';
-        const careerReceipts = politician.career_stats?.['Total Receipts'];
-        const careerDisplay = careerReceipts
-            ? `${formatCurrency(careerReceipts.value)} (Rank: ${careerReceipts.rank ?? 'N/A'})`
-            : 'N/A';
-        row.innerHTML = `
-            <td>${name}</td>
-            <td>${role}</td>
-            <td>${state}</td>
-            <td>${party}</td>
-            <td>${currentDisplay}</td>
-            <td>${careerDisplay}</td>
-        `;
-        tbody.appendChild(row);
-    });
+  console.log('Rendering data:', data); // Debug: log the input data
+  const tbody = document.querySelector('#politicians-table tbody');
+  tbody.innerHTML = ''; // Clear existing content
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6">No data available</td></tr>';
+    return;
+  }
+  data.forEach(politician => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${politician.name || ''}</td>
+      <td>${politician.role || ''}</td>
+      <td>${politician.state || ''}</td>
+      <td>${politician.party || ''}</td>
+      <td>${politician.current_stats?.["Total Receipts"]?.value || ''}</td>
+      <td>${politician.career_stats?.["Total Receipts"]?.value || ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
-
 // Sort data
 function sortData(field, data) {
     const column = columns[field];
