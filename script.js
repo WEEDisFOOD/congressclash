@@ -33,7 +33,7 @@ function formatCurrency(value) {
 function renderTable() {
     const tbody = document.querySelector('#politicians-table tbody');
     tbody.innerHTML = '';
-
+    console.log('Rendering politicians:', politicians); // Debug log
     politicians.forEach(politician => {
         const row = document.createElement('tr');
 
