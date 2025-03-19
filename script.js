@@ -112,17 +112,21 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
 });
 
 // Fetch and initialize
+let politicians = []; // Global variable to store data
+
 fetch('congress_data.json')
-    .then(response => {
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Fetched data:', data); // Debug: log raw data
-        politicians = Array.isArray(data) ? data : [];
-        filterAndSort('');
-    })
-    .catch(error => {
-        console.error('Error fetching or parsing data:', error);
-        renderTable([]); // Show "No data" message on error
-    });
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Fetched data:', data); // Check what’s being fetched
+    politicians = Array.isArray(data) ? data : [];
+    renderTable(politicians); // Call your rendering function
+  })
+  .catch(error => {
+    console.error('Fetch error:', error);
+    renderTable([]); // Render empty table on error
+  });
