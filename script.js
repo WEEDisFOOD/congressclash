@@ -116,9 +116,18 @@ document.querySelectorAll('#politicians-table th').forEach(header => {
 
 // Fetch and initialize
 fetch('congress_data.json')
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Data loaded:', data); // Log the data
         politicians = data;
         sortAndRender();
     })
-    .catch(error => console.error('Error fetching data:', error));
+    .catch(error => {
+        console.error('Error fetching or parsing data:', error);
+        alert('Failed to load data. Check the console for details.');
+    });
