@@ -2,27 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Congress Finance Data</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Congress Members</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            cursor: pointer;
+        }
+        th.sorted-asc::after {
+            content: ' ↑';
+        }
+        th.sorted-desc::after {
+            content: ' ↓';
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Congress Finance Data</h1>
-        <input type="text" id="searchInput" placeholder="Search by name...">
-        <table id="dataTable">
-            <thead>
-                <tr>
-                    <th data-column="name">Name</th>
-                    <th data-column="current_stats.total_receipts">Total Receipts (Current)</th>
-                    <th data-column="current_stats.individual_contributions">Individual Contributions (Current)</th>
-                    <th data-column="career_stats.total_receipts">Career Total Receipts</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Table rows will be dynamically inserted here -->
-            </tbody>
-        </table>
-    </div>
+    <table id="politicians-table">
+        <thead>
+            <tr>
+                <th data-field="name">Name</th>
+                <th data-field="role">Role</th>
+                <th data-field="state">State</th>
+                <th data-field="party">Party</th>
+                <th data-field="currentReceipts">23-24 Receipts</th>
+                <th data-field="careerReceipts">Career Receipts</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
     <script src="script.js"></script>
 </body>
 </html>
