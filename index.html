@@ -4,14 +4,34 @@
     <meta charset="UTF-8">
     <title>Congress Members</title>
     <style>
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { cursor: pointer; }
-        th.sorted-asc::after { content: ' ↑'; }
-        th.sorted-desc::after { content: ' ↓'; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            cursor: pointer;
+        }
+        th.sorted-asc::after {
+            content: ' ↑';
+        }
+        th.sorted-desc::after {
+            content: ' ↓';
+        }
+        #searchInput {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
+    <h1>Congress Members</h1>
+    <input type="text" id="searchInput" placeholder="Search by name...">
     <table id="politicians-table">
         <thead>
             <tr>
