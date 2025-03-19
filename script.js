@@ -1,102 +1,124 @@
-let data = [];
-let filteredData = [];
-let sortColumn = 'name';
-let sortOrder = 'asc';
+// Global variables
+let politicians = [];
+let currentSortField = 'name';
+let currentSortDirection = 'asc';
 
-function renderTable() {
- const tableBody = document.querySelector('#dataTable tbody');
- tableBody.innerHTML = '';
- filteredData.forEach(member => {
- const row = document.createElement('tr');
- row.innerHTML = `
- <td>${member.name}</td>
- <td>${formatCurrency(member.current_stats['Total Receipts']?.value)}</td>
- <td>${formatCurrency(member.current_stats['Total Individual Contributions']?.value)}</td>
- <td>${formatCurrency(member.career_stats['Total Receipts']?.value)}</td>
- `;
- tableBody.appendChild(row);
- });
-}
+// Column definitions with paths and types
+const columns = {
+    name: { path: 'name', type: 'string' },
+    role: { path: 'role', type: 'string' },
+    state: { path: 'state', type: 'string' },
+    party: { path: 'party', type: 'string' },
+    currentReceipts: { path: 'current_stats.Total Receipts.value', type: 'number' },
+    careerReceipts: { path: 'career_stats.Total Receipts.value', type: 'number' }
+};
 
-function formatCurrency(value) {
-    if (value == null) return 'N/A';
-    return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function getNestedValue(obj, path) {
+// Helper to get nested object values
+function getValueByPath(obj, path) {
     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
 }
 
-function filterData(searchTerm) {
-    if (searchTerm) {
-        filteredData = data.filter(member => member.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    } else {
-        filteredData = data;
-    }
+// Format number as currency
+function formatCurrency(value) {
+    if (value === undefined || value === null) return 'N/A';
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(value);
+}
+
+// Render the table
+function renderTable() {
+    const tbody = document.querySelector('#politicians-table tbody');
+    tbody.innerHTML = '';
+
+    politicians.forEach(politician => {
+        const row = document.createElement('tr');
+
+        const name = politician.name || 'N/A';
+        const role = politician.role || 'N/A';
+        const state = politician.state || 'N/A';
+        const party = politician.party || 'N/A';
+
+        const currentReceipts = politician.current_stats?.['Total Receipts'];
+        const currentDisplay = currentReceipts
+            ? `${formatCurrency(currentReceipts.value)} (Rank: ${currentReceipts.rank ?? 'N/A'})`
+            : 'N/A';
+
+        const careerReceipts = politician.career_stats?.['Total Receipts'];
+        const careerDisplay = careerReceipts
+            ? `${formatCurrency(careerReceipts.value)} (Rank: ${careerReceipts.rank ?? 'N/A'})`
+            : 'N/A';
+
+        row.innerHTML = `
+            <td>${name}</td>
+            <td>${role}</td>
+            <td>${state}</td>
+            <td>${party}</td>
+            <td>${currentDisplay}</td>
+            <td>${careerDisplay}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Sort data by field
+function sortData(field) {
+    const column = columns[field];
+    if (!column) return;
+
+    const { path, type } = column;
+    politicians.sort((a, b) => {
+        let aValue = getValueByPath(a, path);
+        let bValue = getValueByPath(b, path);
+
+        if (type === 'number') {
+            aValue = aValue || 0;
+            bValue = bValue || 0;
+            return currentSortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+        } else {
+            aValue = (aValue || '').toLowerCase();
+            bValue = (bValue || '').toLowerCase();
+            return currentSortDirection === 'asc'
+                ? aValue.localeCompare(bValue)
+                : bValue.localeCompare(aValue);
+        }
+    });
     renderTable();
 }
 
-function sortData(column) {
- if (sortColumn === column) {
- sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
- } else {
- sortColumn = column;
- sortOrder = 'asc';
- }
-
- filteredData.sort((a, b) => {
- let valA, valB;
-
- // Map data-column to the correct JSON path
- switch (column) {
- case 'name':
- valA = a.name;
- valB = b.name;
- break;
- case 'current_stats.total_receipts':
- valA = a.current_stats['Total Receipts']?.value || 0;
- valB = b.current_stats['Total Receipts']?.value || 0;
- break;
- case 'current_stats.individual_contributions':
- valA = a.current_stats['Total Individual Contributions']?.value || 0;
- valB = b.current_stats['Total Individual Contributions']?.value || 0;
- break;
- case 'career_stats.total_receipts':
- valA = a.career_stats['Total Receipts']?.value || 0;
- valB = b.career_stats['Total Receipts']?.value || 0;
- break;
- default:
- valA = 0;
- valB = 0;
- }
-
- // Compare values based on sort order
- if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
- if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
- return 0;
- });
-
- renderTable();
+// Update table and sort indicators
+function sortAndRender() {
+    sortData(currentSortField);
+    const headers = document.querySelectorAll('#politicians-table th');
+    headers.forEach(h => h.classList.remove('sorted-asc', 'sorted-desc'));
+    const currentHeader = document.querySelector(`th[data-field="${currentSortField}"]`);
+    if (currentHeader) {
+        currentHeader.classList.add(`sorted-${currentSortDirection}`);
+    }
 }
 
-// Fetch JSON data
-fetch('congress_finance.json')
-    .then(response => response.json())
-    .then(jsonData => {
-        data = jsonData;
-        filteredData = data;
-        renderTable();
-    })
-    .catch(error => console.error('Error loading JSON:', error));
-
-// Add event listeners
-document.querySelector('#searchInput').addEventListener('input', e => {
-    filterData(e.target.value);
-});
-
-document.querySelectorAll('#dataTable th').forEach(th => {
-    th.addEventListener('click', () => {
-        const column = th.dataset.column;
-        sortData(column);
+// Add click events to headers
+document.querySelectorAll('#politicians-table th').forEach(header => {
+    header.addEventListener('click', () => {
+        const field = header.getAttribute('data-field');
+        if (field === currentSortField) {
+            currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSortField = field;
+            currentSortDirection = 'asc';
+        }
+        sortAndRender();
     });
 });
+
+// Fetch and initialize
+fetch('congress_data.json')
+    .then(response => response.json())
+    .then(data => {
+        politicians = data;
+        sortAndRender();
+    })
+    .catch(error => console.error('Error fetching data:', error));
