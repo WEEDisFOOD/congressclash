@@ -1,29 +1,32 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Congress Finance Data</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Congress Clash!</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Congress Finance Data</h1>
-        <input type="text" id="searchInput" placeholder="Search by name...">
-        <table id="dataTable">
-            <thead>
-                <tr>
-                    <th data-column="name">Name</th>
-                    <th data-column="current_stats.total_receipts">Total Receipts (Current)</th>
-                    <th data-column="current_stats.individual_contributions">Individual Contributions (Current)</th>
-                    <th data-column="career_stats.total_receipts">Career Total Receipts</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Table rows will be dynamically inserted here -->
-            </tbody>
-        </table>
-    </div>
+    <header>
+        <h1>Congress Clash!</h1>
+        <p>Explore fundraising data for current members of the US Congress.</p>
+    </header>
+    <input type="text" id="search" placeholder="Search by name...">
+    <table id="congress-table">
+        <thead>
+            <tr>
+                <th data-column="name">Name</th>
+                <th data-column="role">Role</th>
+                <th data-column="state">State</th>
+                <th data-column="party">Party</th>
+                <th data-column="current_receipts">23-24 Receipts</th>
+                <th data-column="career_receipts">Career Receipts</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be added dynamically by JavaScript -->
+        </tbody>
+    </table>
     <script src="script.js"></script>
 </body>
 </html>
