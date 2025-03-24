@@ -1,114 +1,104 @@
-let data = [];
- let filteredData = [];
- let sortColumn = 'name';
- let sortOrder = 'asc';
- 
- function renderTable() {
-     const tableBody = document.querySelector('#dataTable tbody');
-     tableBody.innerHTML = '';
-     filteredData.forEach(member => {
-         const row = document.createElement('tr');
-         row.innerHTML = `
-             <td>${member.name}</td>
-             <td>${formatCurrency(getNestedValue(member, 'current_stats.Total Receipts.value'))}</td>
-             <td>${formatCurrency(getNestedValue(member, 'current_stats.Total Individual Contributions.value'))}</td>
-             <td>${formatCurrency(getNestedValue(member, 'career_stats.Total Receipts.value'))}</td>
-         `;
-         tableBody.appendChild(row);
-     });
-  const tableBody = document.querySelector('#dataTable tbody');
-  tableBody.innerHTML = '';
-  filteredData.forEach(member => {
-  const row = document.createElement('tr');
-  row.innerHTML = `
-  <td>${member.name}</td>
-  <td>${formatCurrency(member.current_stats['Total Receipts']?.value)}</td>
-  <td>${formatCurrency(member.current_stats['Total Individual Contributions']?.value)}</td>
-  <td>${formatCurrency(member.career_stats['Total Receipts']?.value)}</td>
-  `;
-  tableBody.appendChild(row);
-  });
- }
- 
- function formatCurrency(value) {
-     if (value == null) return 'N/A';
-     return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
- }
- 
- function getNestedValue(obj, path) {
-     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
- }
- 
- function filterData(searchTerm) {
-     if (searchTerm) {
-         filteredData = data.filter(member => member.name.toLowerCase().includes(searchTerm.toLowerCase()));
-     } else {
-         filteredData = data;
-     }
-     renderTable();
- }
- 
- function sortData(column) {
-  if (sortColumn === column) {
-  sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-  } else {
-  sortColumn = column;
-  sortOrder = 'asc';
-  }
- 
-  filteredData.sort((a, b) => {
-  let valA, valB;
- 
-  // Map data-column to the correct JSON path
-  switch (column) {
-  case 'name':
-  valA = a.name;
-  valB = b.name;
-  break;
-  case 'current_stats.total_receipts':
-  valA = a.current_stats['Total Receipts']?.value || 0;
-  valB = b.current_stats['Total Receipts']?.value || 0;
-  break;
-  case 'current_stats.individual_contributions':
-  valA = a.current_stats['Total Individual Contributions']?.value || 0;
-  valB = b.current_stats['Total Individual Contributions']?.value || 0;
-  break;
-  case 'career_stats.total_receipts':
-  valA = a.career_stats['Total Receipts']?.value || 0;
-  valB = b.career_stats['Total Receipts']?.value || 0;
-  break;
-  default:
-  valA = 0;
-  valB = 0;
-  }
- 
-  // Compare values based on sort order
-  if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
-  if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
-  return 0;
-  });
- 
-  renderTable();
- }
- 
- // Fetch JSON data
- fetch('congress_finance.json')
-     .then(response => response.json())
-     .then(jsonData => {
-         data = jsonData;
-         filteredData = data;
-         renderTable();
-     })
-     .catch(error => console.error('Error loading JSON:', error));
- 
- // Add event listeners
- document.querySelector('#searchInput').addEventListener('input', e => {
-     filterData(e.target.value);
- });
- 
- document.querySelectorAll('#dataTable th').forEach(th => {
-     th.addEventListener('click', () => {
-         const column = th.dataset.column;
-         sortData(column);
-     });
- });
+// Global variables to store data and current state
+let congressMembers = [];
+let currentSearchTerm = '';
+let currentSortBy = 'career_receipts';
+let currentSortOrder = 'desc';
+
+// Format numbers as currency
+function formatNumber(num) {
+    return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Format receipts with value and rank
+function formatReceipts(receipts) {
+    if (receipts && receipts.value !== undefined) {
+        const value = formatNumber(receipts.value);
+        const rank = receipts.rank ? `(${receipts.rank})` : '(N/A)';
+        return `${value} ${rank}`;
+    }
+    return 'N/A';
+}
+
+// Update the table based on search and sort settings
+function updateTable() {
+    // Filter data based on search term
+    const filteredData = congressMembers.filter(member =>
+        member.name.toLowerCase().includes(currentSearchTerm.toLowerCase())
+    );
+
+    // Sort data based on current sort column and order
+    filteredData.sort((a, b) => {
+        let aValue, bValue;
+        switch (currentSortBy) {
+            case 'name':
+            case 'role':
+            case 'state':
+            case 'party':
+                aValue = a[currentSortBy].toLowerCase();
+                bValue = b[currentSortBy].toLowerCase();
+                return currentSortOrder === 'asc'
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            case 'current_receipts':
+                aValue = a.current_stats['Total Receipts'].value;
+                bValue = b.current_stats['Total Receipts'].value;
+                break;
+            case 'career_receipts':
+                aValue = a.career_stats['Total Receipts'].value;
+                bValue = b.career_stats['Total Receipts'].value;
+                break;
+        }
+        return currentSortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    });
+
+    // Render the table
+    const tbody = document.querySelector('#congress-table tbody');
+    tbody.innerHTML = '';
+    filteredData.forEach(member => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td data-label="Name">${member.name}</td>
+            <td data-label="Role">${member.role}</td>
+            <td data-label="State">${member.state}</td>
+            <td data-label="Party">${member.party}</td>
+            <td data-label="23-24 Receipts">${formatReceipts(member.current_stats['Total Receipts'])}</td>
+            <td data-label="Career Receipts">${formatReceipts(member.career_stats['Total Receipts'])}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('search');
+    const headers = document.querySelectorAll('#congress-table th');
+
+    // Search functionality
+    searchInput.addEventListener('input', () => {
+        currentSearchTerm = searchInput.value;
+        updateTable();
+    });
+
+    // Sorting functionality
+    headers.forEach(header => {
+        header.addEventListener('click', () => {
+            const column = header.dataset.column;
+            if (column === currentSortBy) {
+                currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortBy = column;
+                currentSortOrder = 'asc';
+            }
+            updateTable();
+        });
+    });
+
+    // Fetch and load the JSON data
+    fetch('data.json')
+        .then(response => response.json())
+        .then(data => {
+            congressMembers = data;
+            updateTable(); // Initial render with default sort
+        })
+        .catch(error => console.error('Error fetching data:', error));
+});
